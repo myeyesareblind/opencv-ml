@@ -1014,6 +1014,7 @@ public:
     virtual bool train( CvMLData* data, CvRTParams params=CvRTParams() );
     virtual float predict( const CvMat* sample, const CvMat* missing = 0 ) const;
     virtual float predict_prob( const CvMat* sample, const CvMat* missing = 0 ) const;
+    virtual cv::Mat classify_prob( const CvMat* sample, const CvMat* missing = 0 ) const;
 
     CV_WRAP virtual bool train( const cv::Mat& trainData, int tflag,
                        const cv::Mat& responses, const cv::Mat& varIdx=cv::Mat(),
@@ -1023,6 +1024,7 @@ public:
     CV_WRAP virtual float predict( const cv::Mat& sample, const cv::Mat& missing = cv::Mat() ) const;
     CV_WRAP virtual float predict_prob( const cv::Mat& sample, const cv::Mat& missing = cv::Mat() ) const;
     CV_WRAP virtual cv::Mat getVarImportance();
+    CV_WRAP virtual cv::Mat classify_prob( const cv::Mat& sample, const cv::Mat& missing = cv::Mat() ) const;
 
     CV_WRAP virtual void clear();
 

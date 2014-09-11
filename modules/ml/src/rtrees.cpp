@@ -723,6 +723,41 @@ float CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing) const
     return -1;
 }
 
+cv::Mat CvRTrees::classify_prob( const CvMat* sample, const CvMat* missing ) const
+{
+  double result = -1;
+  double prob = 0;
+  int k;
+
+  int max_nvotes = 0;
+  cv::AutoBuffer<int> _votes(nclasses);
+  int* votes = _votes;
+  memset( votes, 0, sizeof(*votes)*nclasses );
+  for( k = 0; k < ntrees; k++ )
+  {
+    CvDTreeNode* predicted_node = trees[k]->predict( sample, missing );
+    int nvotes;
+    int class_idx = predicted_node->class_idx;
+    CV_Assert( 0 <= class_idx && class_idx < nclasses );
+
+    nvotes = ++votes[class_idx];
+    if( nvotes > max_nvotes )
+    {
+      max_nvotes = nvotes;
+      result = predicted_node->value;
+      prob = (double) max_nvotes / ntrees;
+    }
+  }
+  double rs[2] = {result, prob};
+  return cv::Mat(1, 2, CV_64F, rs);
+}
+
+cv::Mat CvRTrees::classify_prob( const cv::Mat& _sample, const cv::Mat& _missing) const 
+{
+    CvMat sample = _sample, mmask = _missing;
+    return classify_prob(&sample, mmask.data.ptr ? &mmask : 0);
+}
+
 void CvRTrees::write( CvFileStorage* fs, const char* name ) const
 {
     int k;
