@@ -39,6 +39,8 @@
 //M*/
 
 #include "precomp.hpp"
+#include <algorithm>
+#include <vector>
 
 CvForestTree::CvForestTree()
 {
@@ -238,6 +240,7 @@ void CvRTrees::clear()
     cvReleaseMat( &active_var_mask );
     cvReleaseMat( &var_importance );
     ntrees = 0;
+    unique_classes.clear();
 }
 
 
@@ -268,6 +271,10 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
                         const CvMat* _missing_mask, CvRTParams params )
 {
     clear();
+    for (int i = 0; i < _responses->rows; i++)
+    {
+	unique_classes.insert(_responses->data.db[i]);
+    }
 
     CvDTreeParams tree_params( params.max_depth, params.min_sample_count,
         params.regression_accuracy, params.use_surrogates, params.max_categories,
@@ -723,33 +730,43 @@ float CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing) const
     return -1;
 }
 
+bool classify_prob_sort(std::pair<double, double> lhs, std::pair<double, double> rhs)
+{
+  return lhs.second > rhs.second;
+}
+
 cv::Mat CvRTrees::classify_prob( const CvMat* sample, const CvMat* missing ) const
 {
-  double result = -1;
-  double prob = 0;
-  int k;
+  int sz = unique_classes.size();
+  std::vector<std::pair<double, double> > acc;
+  for (std::set<double>::iterator it = unique_classes.begin(); it != unique_classes.end(); ++it)
+  {
+    acc.push_back(std::make_pair(*it, 0));
+  }
 
-  int max_nvotes = 0;
-  cv::AutoBuffer<int> _votes(nclasses);
-  int* votes = _votes;
-  memset( votes, 0, sizeof(*votes)*nclasses );
-  for( k = 0; k < ntrees; k++ )
+  for(int k = 0; k < ntrees; k++ )
   {
     CvDTreeNode* predicted_node = trees[k]->predict( sample, missing );
-    int nvotes;
-    int class_idx = predicted_node->class_idx;
-    CV_Assert( 0 <= class_idx && class_idx < nclasses );
-
-    nvotes = ++votes[class_idx];
-    if( nvotes > max_nvotes )
+    double value = predicted_node -> value;
+    for (std::vector<std::pair<double, double> >::iterator it = acc.begin(); it != acc.end(); ++it)
     {
-      max_nvotes = nvotes;
-      result = predicted_node->value;
-      prob = (double) max_nvotes / ntrees;
+      if (value == (*it).first)
+      {
+        (*it).second++;
+        break ;
+      }
     }
   }
-  double rs[2] = {result, prob};
-  return cv::Mat(1, 2, CV_64F, rs);
+
+  std::sort(acc.begin(), acc.end(), classify_prob_sort);
+
+  cv::Mat result(sz, 2, CV_64F);
+  for (int i = 0; i < sz; i++) {
+    std::pair<double, double> const& p = acc[i];
+    result.at<double>(i,0) = p.first;
+    result.at<double>(i,1) = p.second;
+  }
+  return result;
 }
 
 cv::Mat CvRTrees::classify_prob( const cv::Mat& _sample, const cv::Mat& _missing) const 

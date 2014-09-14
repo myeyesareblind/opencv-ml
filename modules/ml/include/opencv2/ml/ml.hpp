@@ -47,6 +47,7 @@
 #ifdef __cplusplus
 
 #include <map>
+#include <set>
 #include <string>
 #include <iostream>
 
@@ -1058,6 +1059,7 @@ protected:
     double oob_error;
     CvMat* var_importance;
     int nsamples;
+    std::set<double> unique_classes;
 
     cv::RNG* rng;
     CvMat* active_var_mask;
