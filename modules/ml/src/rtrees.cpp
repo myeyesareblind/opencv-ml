@@ -727,7 +727,7 @@ float CvRTrees::predict_prob( const CvMat* sample, const CvMat* missing) const
 
 bool classify_prob_sort(std::pair<double, double> lhs, std::pair<double, double> rhs)
 {
-  return lhs.second > rhs.second;
+  return lhs.first < rhs.first;
 }
 
 cv::Mat CvRTrees::classify_prob( const CvMat* sample, const CvMat* missing ) const
