@@ -240,7 +240,6 @@ void CvRTrees::clear()
     cvReleaseMat( &active_var_mask );
     cvReleaseMat( &var_importance );
     ntrees = 0;
-    unique_classes.clear();
 }
 
 
@@ -271,10 +270,6 @@ bool CvRTrees::train( const CvMat* _train_data, int _tflag,
                         const CvMat* _missing_mask, CvRTParams params )
 {
     clear();
-    for (int i = 0; i < _responses->rows; i++)
-    {
-	unique_classes.insert(_responses->data.db[i]);
-    }
 
     CvDTreeParams tree_params( params.max_depth, params.min_sample_count,
         params.regression_accuracy, params.use_surrogates, params.max_categories,
@@ -737,18 +732,19 @@ bool classify_prob_sort(std::pair<double, double> lhs, std::pair<double, double>
 
 cv::Mat CvRTrees::classify_prob( const CvMat* sample, const CvMat* missing ) const
 {
-  int sz = unique_classes.size();
-  std::vector<std::pair<double, double> > acc;
-  for (std::set<double>::iterator it = unique_classes.begin(); it != unique_classes.end(); ++it)
+  int sz = data->cat_map->cols;
+  std::vector<std::pair<float, float> > acc;
+  for (int i = 0; i < sz; i++)
   {
-    acc.push_back(std::make_pair(*it, 0));
+    int class_id = data->cat_map->data.i[i];
+    acc.push_back(std::make_pair(class_id, 0));
   }
 
   for(int k = 0; k < ntrees; k++ )
   {
     CvDTreeNode* predicted_node = trees[k]->predict( sample, missing );
     double value = predicted_node -> value;
-    for (std::vector<std::pair<double, double> >::iterator it = acc.begin(); it != acc.end(); ++it)
+    for (std::vector<std::pair<float, float> >::iterator it = acc.begin(); it != acc.end(); ++it)
     {
       if (value == (*it).first)
       {
@@ -760,11 +756,11 @@ cv::Mat CvRTrees::classify_prob( const CvMat* sample, const CvMat* missing ) con
 
   std::sort(acc.begin(), acc.end(), classify_prob_sort);
 
-  cv::Mat result(sz, 2, CV_64F);
+  cv::Mat result(sz, 2, CV_32F);
   for (int i = 0; i < sz; i++) {
-    std::pair<double, double> const& p = acc[i];
-    result.at<double>(i,0) = p.first;
-    result.at<double>(i,1) = p.second;
+    std::pair<float, float> const& p = acc[i];
+    result.at<float>(i,0) = p.first;
+    result.at<float>(i,1) = p.second / ntrees;
   }
   return result;
 }
