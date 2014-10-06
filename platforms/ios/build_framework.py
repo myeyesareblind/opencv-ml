@@ -38,6 +38,7 @@ def build_opencv(srcroot, buildroot, target, arch):
     # for some reason, if you do not specify CMAKE_BUILD_TYPE, it puts libs to "RELEASE" rather than "Release"
 
     cmakeargs = ("-GXcode " +
+                "-DCMAKE_C_FLAGS=\"-Wno-implicit-function-declaration\" " +
                 "-DCMAKE_BUILD_TYPE=Release " +
                 "-DCMAKE_TOOLCHAIN_FILE=%s/platforms/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
                 "-D BUILD_opencv_world=ON " + 
@@ -62,7 +63,6 @@ def build_opencv(srcroot, buildroot, target, arch):
                 "-D WITH_JPEG=OFF " + 
                 "-D WITH_TIFF=OFF " + 
                 "-D WITH_PNG=OFF " + 
-                "-D WITH_ZLIB=OFF " + 
                 "-D WITH_OPENEXR=OFF " + 
                 "-D WITH_EIGEN=OFF " + 
                 "-D WITH_OPENGL=OFF " + 
@@ -79,8 +79,8 @@ def build_opencv(srcroot, buildroot, target, arch):
         if os.path.isfile(wlib):
             os.remove(wlib)
 
-    os.system("xcodebuild IPHONEOS_DEPLOYMENT_TARGET=6.0 -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Release -target ALL_BUILD" % (arch, target.lower()))
-    os.system("xcodebuild IPHONEOS_DEPLOYMENT_TARGET=6.0 ARCHS=%s -sdk %s -configuration Release -target install install" % (arch, target.lower()))
+    os.system("xcodebuild IPHONEOS_DEPLOYMENT_TARGET=8.0 -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Release -target ALL_BUILD" % (arch, target.lower()))
+    os.system("xcodebuild IPHONEOS_DEPLOYMENT_TARGET=8.0 ARCHS=%s -sdk %s -configuration Release -target install install" % (arch, target.lower()))
     os.chdir(currdir)
 
 def put_framework_together(srcroot, dstroot):
@@ -125,6 +125,7 @@ def build_framework(srcroot, dstroot):
 
     targets = ["iPhoneOS", "iPhoneOS", "iPhoneOS", "iPhoneSimulator", "iPhoneSimulator"]
     archs = ["armv7", "armv7s", "arm64", "i386", "x86_64"]
+
 
     for i in range(len(targets)):
         build_opencv(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
