@@ -36,10 +36,37 @@ def build_opencv(srcroot, buildroot, target, arch):
     currdir = os.getcwd()
     os.chdir(builddir)
     # for some reason, if you do not specify CMAKE_BUILD_TYPE, it puts libs to "RELEASE" rather than "Release"
+
     cmakeargs = ("-GXcode " +
                 "-DCMAKE_BUILD_TYPE=Release " +
                 "-DCMAKE_TOOLCHAIN_FILE=%s/platforms/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
-                "-DBUILD_opencv_world=ON " +
+                "-D BUILD_opencv_world=ON " + 
+                "-D BUILD_opencv_imgproc=OFF " + 
+                "-D BUILD_opencv_flann=OFF " + 
+                "-D BUILD_opencv_highgui=OFF " + 
+                "-D BUILD_opencv_features2d=OFF " + 
+                "-D BUILD_opencv_calib3d=OFF " + 
+                "-D BUILD_opencv_video=OFF " + 
+                "-D BUILD_opencv_legacy=OFF " + 
+                "-D BUILD_opencv_objdetect=OFF " + 
+                "-D BUILD_opencv_photo=OFF " + 
+                "-D BUILD_opencv_gpu=OFF " + 
+                "-D BUILD_opencv_ocl=OFF " + 
+                "-D BUILD_opencv_nonfree=OFF " + 
+                "-D BUILD_opencv_contrib=OFF " + 
+                "-D BUILD_opencv_stitching=OFF " + 
+                "-D BUILD_opencv_superres=OFF " + 
+                "-D BUILD_opencv_ts=OFF " + 
+                "-D BUILD_opencv_videostab=OFF " + 
+                "-D WITH_JASPER=OFF " + 
+                "-D WITH_JPEG=OFF " + 
+                "-D WITH_TIFF=OFF " + 
+                "-D WITH_PNG=OFF " + 
+                "-D WITH_ZLIB=OFF " + 
+                "-D WITH_OPENEXR=OFF " + 
+                "-D WITH_EIGEN=OFF " + 
+                "-D WITH_OPENGL=OFF " + 
+                "-D WITH_CUDA=OFF " + 
                 "-DCMAKE_INSTALL_PREFIX=install") % (srcroot, target)
     # if cmake cache exists, just rerun cmake to update OpenCV.xproj if necessary
     if os.path.isfile(os.path.join(builddir, "CMakeCache.txt")):
@@ -98,6 +125,7 @@ def build_framework(srcroot, dstroot):
 
     targets = ["iPhoneOS", "iPhoneOS", "iPhoneOS", "iPhoneSimulator", "iPhoneSimulator"]
     archs = ["armv7", "armv7s", "arm64", "i386", "x86_64"]
+
     for i in range(len(targets)):
         build_opencv(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
 
